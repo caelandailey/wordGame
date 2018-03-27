@@ -11,12 +11,39 @@ import UIKit
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-    var window: UIWindow?
+    var window: UIWindow? = UIWindow()
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        /*
+        let VCview = UIViewController()
+        let boxView = BoardControl()
+        boxView.frame = CGRect(x:0, y:0, width: 300, height: 300)
+        VCview.view = boxView
+        window?.rootViewController = VCview
+        window?.makeKeyAndVisible()
+        */
+        window?.backgroundColor = UIColor(red: 245/256, green: 245/256, blue: 245/256, alpha: 1.0)
+        
+        // Create controllers
+        let tabBarController = UITabBarController()
+        tabBarController.tabBar.barTintColor = UIColor.white
+        
+        let progressTableViewController = ProgressTableViewController()
+        let finishedTableViewController = FinishedTableViewController()
+        
+        let progressNavigationController = ProgressNavigationController(rootViewController: progressTableViewController)
+        let finishedNavigationController = FinishedNavigationController(rootViewController: finishedTableViewController)
+        
+        tabBarController.viewControllers = [progressNavigationController, finishedNavigationController]
+        tabBarController.selectedViewController = progressNavigationController
+        
+        window?.rootViewController = tabBarController
+        window?.makeKeyAndVisible()
+        
         return true
+ 
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
