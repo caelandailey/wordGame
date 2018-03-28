@@ -1,6 +1,4 @@
 //
-//  tabBarController.swift
-//  Elephant
 //
 //  Created by Caelan Dailey on 2/21/18.
 //  Copyright © 2018 Caelan Dailey. All rights reserved.

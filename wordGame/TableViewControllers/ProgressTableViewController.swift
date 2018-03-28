@@ -1,23 +1,19 @@
 //
-//  TableViewController.swift
-//  Elephant
+
 //
 //  Created by Caelan Dailey on 2/20/18.
 //  Copyright © 2018 Caelan Dailey. All rights reserved.
 //
-// This class represents the list of alarms in our alarmdataset in TABLE form
-// alarm can have a name, date, ect
-// Table can edit alarms
-// Table can delete alarms
-// Table can refresh
-// Table can add alarms
+// This class represents the list of games in progress in our progressdataset in TABLE form
+// Game can have a list of colors, list of characters, score, bonus letters
+// Table shows preview of game that shows the blocks that are left
+// Can add games or go to games in progress from this table or just view games in progress
 
 import UIKit
 
-class ProgressTableViewController: UITableViewController, AlarmDatasetDelegate {
+class ProgressTableViewController: UITableViewController, ProgressDatasetDelegate {
     
     private static var cellReuseIdentifier = "ProgressTableViewController.DatasetItemsCellIdentifier"
-    
     
     let delegateID: String = UIDevice.current.identifierForVendor!.uuidString
     
@@ -36,17 +32,17 @@ class ProgressTableViewController: UITableViewController, AlarmDatasetDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        AlarmDataset.registerDelegate(self)
+        ProgressDataset.registerDelegate(self)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: ProgressTableViewController.cellReuseIdentifier)
-        self.navigationItem.rightBarButtonItem = createAlarmButton
+        self.navigationItem.rightBarButtonItem = newGameButton
         self.navigationItem.leftBarButtonItem = refreshListButton
         self.title = "In-progress"
     }
     
     // Create button
-    lazy var createAlarmButton : UIBarButtonItem = {
-        let createAlarmButton = UIBarButtonItem()
-        createAlarmButton.title = "+"
+    lazy var newGameButton : UIBarButtonItem = {
+        let newGameButton = UIBarButtonItem()
+        newGameButton.title = "+"
         let style = NSMutableParagraphStyle()
         style.alignment = .center
         var styles: [NSAttributedStringKey: Any] = [NSAttributedStringKey(rawValue: NSAttributedStringKey.paragraphStyle.rawValue): style]
@@ -56,10 +52,10 @@ class ProgressTableViewController: UITableViewController, AlarmDatasetDelegate {
         let zone:String = "Days"
         
         // Create and draw
-        createAlarmButton.setTitleTextAttributes(styles, for: UIControlState.normal)
-        createAlarmButton.action = #selector(goToAlarmView)
-        createAlarmButton.target = self
-        return createAlarmButton
+        newGameButton.setTitleTextAttributes(styles, for: UIControlState.normal)
+        newGameButton.action = #selector(goToAlarmView)
+        newGameButton.target = self
+        return newGameButton
     }()
     
     // Refresh table if buggy
@@ -88,59 +84,70 @@ class ProgressTableViewController: UITableViewController, AlarmDatasetDelegate {
             return 0
         }
         
-        return AlarmDataset.count
+        return ProgressDataset.count
+    }
+    // Clear    = 0
+    // Green    = 1
+    // Red      = 2
+    // Black    = 3
+    // Yellow   = 4
+    // White    = 5
+    // Helper function to get colors
+    private func getColor(_ colors: [[String]]) -> [[CGColor]] {
+        var newColors: [[CGColor]] = Array(repeatElement(Array(repeatElement(UIColor.clear.cgColor, count: 12)), count: 9))
+        for y in 0..<colors[0].count {
+            for x in 0..<colors.count {
+                switch colors[x][y] {
+                case "0": newColors[x][y] = UIColor.clear.cgColor
+                case "1": newColors[x][y] = UIColor.green.cgColor
+                case "2": newColors[x][y] = UIColor.red.cgColor
+                case "3": newColors[x][y] = UIColor.black.cgColor
+                case "4": newColors[x][y] = UIColor.yellow.cgColor
+                case "5": newColors[x][y] = UIColor.white.cgColor
+                default: newColors[x][y] = UIColor.clear.cgColor
+                }
+            }
+        }
+        return newColors
     }
     
+    // Calculates the letters that are left
+    private func lettersLeft(_ letters: [[String]]) -> CGFloat {
+        var num: CGFloat = 0
+        for x in 0..<letters.count {
+            for y in 0..<letters[0].count {
+                if (letters[x][y] != "0") {
+                    num += 1
+                }
+            }
+        }
+        return num
+    }
+
     // THIS CREATES THE CELLS
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard tableView === self.tableView, indexPath.section == 0, indexPath.row < AlarmDataset.count else {
+        guard tableView === self.tableView, indexPath.section == 0, indexPath.row < ProgressDataset.count else {
             return UITableViewCell()
         }
         var cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: ProgressTableViewController.cellReuseIdentifier, for: indexPath)
         if cell.detailTextLabel == nil {
             cell = UITableViewCell(style: .value1, reuseIdentifier: ProgressTableViewController.cellReuseIdentifier)
         }
+        cell.backgroundColor = UIColor.groupTableViewBackground
         
-        // 
+        //Add text
+        let game = ProgressDataset.entry(atIndex: indexPath.row)
+        let complete = Int(100 * (lettersLeft(game.charPositions)/108))
+        cell.textLabel?.text = "Score: " + String(game.score) + " | Percentage %: \(complete)"
         
+        // Add preview
+        let gamePreview = GamePreview()
+        gamePreview.frame = CGRect(x: 5, y: 0, width: 30, height: 40)
+        gamePreview.cellColors = getColor(game.cellColors)
+        gamePreview.backgroundColor = UIColor.clear
         
-        
-        // Get obj for row
-        let alarm = AlarmDataset.entry(atIndex: indexPath.row)
-        cell.textLabel?.text = alarm.name
-        
-        // Create labels
-        // Not complicatec
-        let hour: Int = Int(alarm.time/3600)
-        let minute: Int = (Int(alarm.time) - (hour)*3600) / 60
-        var minuteString = String(minute)
-        if (minute < 10) {
-            minuteString = "0\(minute)"
-        }
-        var dayString = ""
-        for i in 0...6 {
-            if (alarm.days[i] == 1) {
-                
-                switch(i) {
-                case 0: dayString += " Mon"
-                case 1: dayString += " Tue"
-                case 2: dayString += " Wed"
-                case 3: dayString += " Thu"
-                case 4: dayString += " Fri"
-                case 5: dayString += " Sat"
-                case 6: dayString += " Sun"
-                default: dayString += ""
-                }
-            }
-        }
-        var textString = dayString + " \(hour):" + minuteString + " Repeating: "
-        textString += "\(alarm.repeater)"
-        textString += " Duration: \(Int(alarm.duration))"
-        cell.detailTextLabel?.numberOfLines = 2
-        cell.detailTextLabel?.text = textString
-        
-        cell.detailTextLabel?.adjustsFontSizeToFitWidth = true
-        
+        cell.accessoryView = gamePreview
+ 
         return cell
     }
     
@@ -156,7 +163,7 @@ class ProgressTableViewController: UITableViewController, AlarmDatasetDelegate {
         // if deleting
         if (editingStyle == .delete) {
             // delete entry
-            AlarmDataset.deleteEntry(atIndex: indexPath.row)
+            ProgressDataset.deleteEntry(atIndex: indexPath.row)
             // Update table
             tableView.beginUpdates()
             tableView.deleteRows(at: [indexPath], with: .middle)
@@ -164,15 +171,12 @@ class ProgressTableViewController: UITableViewController, AlarmDatasetDelegate {
         }
     }
     
-    // GO TO EDIT ALARM
+    // GO TO EDIT
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard tableView === self.tableView, indexPath.section == 0, indexPath.row < AlarmDataset.count else {
+        guard tableView === self.tableView, indexPath.section == 0, indexPath.row < ProgressDataset.count else {
             return
         }
-        
         navigationController?.pushViewController(ProgressViewController(withIndex: indexPath.row), animated: true)
-        
     }
-    
 }
 

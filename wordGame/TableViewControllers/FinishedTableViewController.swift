@@ -1,23 +1,17 @@
 //
-//  TableViewController.swift
-//  Elephant
 //
 //  Created by Caelan Dailey on 2/20/18.
 //  Copyright © 2018 Caelan Dailey. All rights reserved.
 //
-// This class represents the list of alarms in our alarmdataset in TABLE form
-// alarm can have a name, date, ect
-// Table can edit alarms
-// Table can delete alarms
-// Table can refresh
-// Table can add alarms
+// Represents the data set of finished games
+// Just display the score of each game
+// Displays the most recent finished game first
 
 import UIKit
 
-class FinishedTableViewController: UITableViewController, AlarmDatasetDelegate {
+class FinishedTableViewController: UITableViewController, FinishedDatasetDelegate {
     
     private static var cellReuseIdentifier = "FinishedTableViewController.DatasetItemsCellIdentifier"
-    
     
     let delegateID: String = UIDevice.current.identifierForVendor!.uuidString
     
@@ -36,31 +30,13 @@ class FinishedTableViewController: UITableViewController, AlarmDatasetDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        AlarmDataset.registerDelegate(self)
+        FinishedDataset.registerDelegate(self)
+        
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: FinishedTableViewController.cellReuseIdentifier)
         //self.navigationItem.rightBarButtonItem = createAlarmButton
-        //self.navigationItem.leftBarButtonItem = refreshListButton
+        self.navigationItem.leftBarButtonItem = refreshListButton
         self.title = "Finished"
     }
-    
-    // Create button
-    lazy var createAlarmButton : UIBarButtonItem = {
-        let createAlarmButton = UIBarButtonItem()
-        createAlarmButton.title = "+"
-        let style = NSMutableParagraphStyle()
-        style.alignment = .center
-        var styles: [NSAttributedStringKey: Any] = [NSAttributedStringKey(rawValue: NSAttributedStringKey.paragraphStyle.rawValue): style]
-        styles[NSAttributedStringKey.font] = UIFont(name: "DINCondensed-Bold", size: 40 )
-        
-        // set string
-        let zone:String = "Days"
-        
-        // Create and draw
-        createAlarmButton.setTitleTextAttributes(styles, for: UIControlState.normal)
-        createAlarmButton.action = #selector(goToAlarmView)
-        createAlarmButton.target = self
-        return createAlarmButton
-    }()
     
     // Refresh table if buggy
     lazy var refreshListButton : UIBarButtonItem = {
@@ -87,12 +63,12 @@ class FinishedTableViewController: UITableViewController, AlarmDatasetDelegate {
             return 0
         }
         
-        return AlarmDataset.count
+        return FinishedDataset.count
     }
-    
+
     // THIS CREATES THE CELLS
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard tableView === self.tableView, indexPath.section == 0, indexPath.row < AlarmDataset.count else {
+        guard tableView === self.tableView, indexPath.section == 0, indexPath.row < FinishedDataset.count else {
             return UITableViewCell()
         }
         var cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: FinishedTableViewController.cellReuseIdentifier, for: indexPath)
@@ -100,41 +76,9 @@ class FinishedTableViewController: UITableViewController, AlarmDatasetDelegate {
             cell = UITableViewCell(style: .value1, reuseIdentifier: FinishedTableViewController.cellReuseIdentifier)
         }
         
-        // Get obj for row
-        let alarm = AlarmDataset.entry(atIndex: indexPath.row)
-        cell.textLabel?.text = alarm.name
-        
-        // Create labels
-        // Not complicatec
-        let hour: Int = Int(alarm.time/3600)
-        let minute: Int = (Int(alarm.time) - (hour)*3600) / 60
-        var minuteString = String(minute)
-        if (minute < 10) {
-            minuteString = "0\(minute)"
-        }
-        var dayString = ""
-        for i in 0...6 {
-            if (alarm.days[i] == 1) {
-                
-                switch(i) {
-                case 0: dayString += " Mon"
-                case 1: dayString += " Tue"
-                case 2: dayString += " Wed"
-                case 3: dayString += " Thu"
-                case 4: dayString += " Fri"
-                case 5: dayString += " Sat"
-                case 6: dayString += " Sun"
-                default: dayString += ""
-                }
-            }
-        }
-        var textString = dayString + " \(hour):" + minuteString + " Repeating: "
-        textString += "\(alarm.repeater)"
-        textString += " Duration: \(Int(alarm.duration))"
-        cell.detailTextLabel?.numberOfLines = 2
-        cell.detailTextLabel?.text = textString
-        
-        cell.detailTextLabel?.adjustsFontSizeToFitWidth = true
+        // Just show score
+        let game = FinishedDataset.entry(atIndex: indexPath.row)
+        cell.textLabel?.text = "Score: " + String(game.score)
         
         return cell
     }
@@ -144,6 +88,8 @@ class FinishedTableViewController: UITableViewController, AlarmDatasetDelegate {
         return true
     }
     
+    
+    
     // If we can edit then check editing style
     // THIS WORKS ON ALARMTABLE BUT NOT EVENT TABLE
     // WHY?
@@ -151,7 +97,7 @@ class FinishedTableViewController: UITableViewController, AlarmDatasetDelegate {
         // if deleting
         if (editingStyle == .delete) {
             // delete entry
-            AlarmDataset.deleteEntry(atIndex: indexPath.row)
+            FinishedDataset.deleteEntry(atIndex: indexPath.row)
             // Update table
             tableView.beginUpdates()
             tableView.deleteRows(at: [indexPath], with: .middle)
@@ -159,14 +105,11 @@ class FinishedTableViewController: UITableViewController, AlarmDatasetDelegate {
         }
     }
     
-    // GO TO EDIT ALARM
+    // GO TO GAME
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard tableView === self.tableView, indexPath.section == 0, indexPath.row < AlarmDataset.count else {
+        guard tableView === self.tableView, indexPath.section == 0, indexPath.row < FinishedDataset.count else {
             return
         }
-        
-        navigationController?.pushViewController(ProgressViewController(withIndex: indexPath.row), animated: true)
-        
+        navigationController?.pushViewController(FinishedViewController(withIndex: indexPath.row), animated: true)
     }
-    
 }
