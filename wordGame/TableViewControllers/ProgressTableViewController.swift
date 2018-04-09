@@ -129,10 +129,10 @@ class ProgressTableViewController: UITableViewController, ProgressDatasetDelegat
         guard tableView === self.tableView, indexPath.section == 0, indexPath.row < ProgressDataset.count else {
             return UITableViewCell()
         }
-        var cell: UITableViewCell = tableView.dequeueReusableCell(withIdentifier: ProgressTableViewController.cellReuseIdentifier, for: indexPath)
-        if cell.detailTextLabel == nil {
-            cell = UITableViewCell(style: .value1, reuseIdentifier: ProgressTableViewController.cellReuseIdentifier)
-        }
+        let cell: UITableViewCell = UITableViewCell()
+            
+           // tableView.dequeueReusableCell(withIdentifier: ProgressTableViewController.cellReuseIdentifier, for: indexPath)
+        
         cell.backgroundColor = UIColor.groupTableViewBackground
         
         //Add text
@@ -154,6 +154,10 @@ class ProgressTableViewController: UITableViewController, ProgressDatasetDelegat
     // Allows editing
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         return true
+    }
+    
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 100.0
     }
     
     // If we can edit then check editing style
